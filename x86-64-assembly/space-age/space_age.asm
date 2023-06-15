@@ -4,8 +4,6 @@
 section .text
 global age
 age:
-    push rbp
-    mov rbp, rsp
     ; rdi = int index
     ; rsi = int seconds
     lea rax, [mercury_year]     ; load base array index
@@ -13,7 +11,6 @@ age:
     mulss xmm1, [earth_seconds] ; multiply by earth seconds
     cvtsi2ss xmm0, qword rsi    ; convert argument into float
     divss xmm0, xmm1            ; seconds / (earth_seconds * planet_year)
-    leave
     ret
 
 
