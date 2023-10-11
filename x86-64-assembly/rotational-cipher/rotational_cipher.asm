@@ -11,6 +11,7 @@ rotate:
     mov r10, rdi
     mov r11, rdx ; move buffer to r11
     mov ecx, 26
+    xor edi, edi
 check_char:
     movzx ebx, byte [r10] ; get current character
     cmp ebx, 'A'          ; char to limits and jump accor10ngly
@@ -27,13 +28,13 @@ non_capital_letter:
 capital_letter:
     mov edi, 'A'     ; offset = 'A'
 shift:
-    sub ebx, edi      ; remove offset
-    add ebx, esi     ; add shift
+    sub bx, di      ; remove offset
+    add bx, si     ; add shift
     xor edx, edx    ; zero out for division
-    mov eax, ebx
-    div ecx          ; divide char by 26
-    mov ebx, edx      ; set char to remainder
-    add ebx, edi
+    mov ax, bx
+    div cl          ; divide char by 26
+    mov bx, dx      ; set char to remainder
+    add bx, di
 copy_char:
     mov byte [r11], bl ; copy encrypted letter to buffer
 increment_buffers:
