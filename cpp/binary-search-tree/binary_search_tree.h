@@ -8,47 +8,44 @@ namespace binary_search_tree {
 
 template<typename T>
 class binary_tree {
-    using tree_type = binary_tree<T>;
-
 public:
 
 
-    binary_tree() = default;
+    explicit binary_tree() = default;
     ~binary_tree() = default;
-    binary_tree(binary_tree&&) = delete;
+ 
+    explicit binary_tree(binary_tree&&) = default;
+    binary_tree& operator=(binary_tree&&) = default;
+
     binary_tree(const binary_tree&) = delete;
     binary_tree& operator=(const binary_tree&) = delete;
 
-    binary_tree(T value)
-    {
-        m_value = value;
-    }
-    T data() const
+    binary_tree(T value) : m_value{std::move(value)} {}
+
+    const T& data() const
     {
         return m_value;
     }
-    void insert(T value)
+
+    template<typename U>
+    void insert(U&& value)
     {
-        if (value <= m_value)
-        {
-            if (m_left == nullptr) {
-                m_left = std::make_unique<tree_type>(value);
-            } else {
-               m_left->insert(value);
+        static_assert(std::is_same_v<T, std::remove_cv_t<std::remove_reference_t<U>>>, "Inserted type must match stored type");
+        binary_tree* current = this;
+        while (true) {
+            auto& branch = value <= current->m_value ? current->m_left : current->m_right;
+            if (!branch) {
+                branch = std::make_unique<binary_tree>(std::forward<U>(value));
+                break;
             }
-        } else {
-            if (m_right == nullptr) {
-                m_right = std::make_unique<tree_type>(value);
-            } else {
-                m_right->insert(value);
-            }
+            current = branch.get();
         }
     }
-    const std::unique_ptr<tree_type>& left() const
+    const std::unique_ptr<binary_tree>& left() const
     {
         return m_left;
     }
-    const std::unique_ptr<tree_type>& right() const
+    const std::unique_ptr<binary_tree>& right() const
     {
         return m_right;
     }
@@ -56,9 +53,14 @@ public:
 
 private:
     struct Iterator {
-        tree_type* ptr = nullptr;
 
-        Iterator() = default;
+        using iterator_category = std::input_iterator_tag;
+        using value_type        = T;
+        using difference_type   = T;
+        using pointer           = T*;
+        using reference         = T&;
+
+        explicit Iterator() = default;
         Iterator(binary_tree& tree) : ptr{&tree} {
             goLeft();
             ptr = stack.top();
@@ -71,15 +73,15 @@ private:
                 p = p->left().get();
             }
         }
-        bool operator==(const Iterator& other)
+        bool operator==(const Iterator& other) const
         {
             return ptr == other.ptr;
         }
-        bool operator!=(const Iterator& other)
+        bool operator!=(const Iterator& other) const
         {
             return !(*this == other);
         }
-        Iterator& operator++() {
+        const Iterator& operator++() {
             if (ptr == nullptr) {
                 return *this;
             }
@@ -97,31 +99,37 @@ private:
             }
             return *this;
         }
-        Iterator operator++(int)
+        const Iterator operator++(int)
         {
             Iterator next = *this;
             ++(*this);
             return next;
         }
-        T& operator*()
+        const T& operator*()
         {
             return ptr->m_value;
         }
+        T operator->()
+        {
+            *this;
+        }
         private:
-            std::stack<tree_type*> stack{};
+            binary_tree* ptr = nullptr;
+            std::stack<binary_tree*> stack{};
     };
 public:
-    Iterator begin()
+    const Iterator begin()
     {
         return Iterator(*this);
     }
-    Iterator end()
+    const Iterator end()
     {
         return Iterator(); 
     }
 
 private:
-    std::unique_ptr<tree_type> m_left{nullptr}, m_right{nullptr};
+    std::unique_ptr<binary_tree> m_left;
+    std::unique_ptr<binary_tree> m_right;
     T m_value{};
 
 };
